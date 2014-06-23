@@ -14,20 +14,23 @@ import glob
 
 def main():
     parser = argparse.ArgumentParser(description='Merge wav files')
-    parser.add_argument('dirname', metavar='DIR', type=str, nargs=1,
+    parser.add_argument('dirname', metavar='DIR', type=str,
                         help='Specify a directory containing .wav files')
-    parser.add_argument('--output', metavar='OUTPUTDIR', type=str, nargs=1, default='.',
+    parser.add_argument('--output', metavar='OUTPUTDIR', type=str, default='./test.wav',
                         help='Specify an output directory')
+    parser.add_argument('--glob', metavar='GLOB', type=str, default='*.wav',
+                        help='Specify glob pattern')
     args = parser.parse_args()
-    files = getWavFilesInDir(dirName=args.dirname[0])
+    pprint.pprint(args)
+    files = getWavFilesInDir(dirName=args.dirname, fglob=args.glob)
     waveHandlers = [getFileAndReturnFrames(singleFile) for chunk in files for singleFile in chunk]
     merge(waveHandlers)
     
     
-def getWavFilesInDir(dirName, groupBy=64):
+def getWavFilesInDir(dirName, groupBy=64, fglob="*.wav"):
     files = []
     chunks = []
-    for fileName in glob.glob(join(dirName, '*.wav')):
+    for fileName in glob.glob(join(dirName, fglob)):
         chunks.append(join(dirName, fileName))
         if len(chunks) == groupBy:
             files.append(chunks)
@@ -48,11 +51,12 @@ def getFileAndReturnFrames(fileName, frames=1000):
     
 def merge(filesList, groupedBy = 64):
     masterParams = filesList[0][1];
-    longestFilesFramesCount = 22050;
-    writeHandle = getWriteHandle(masterParams, longestFilesFramesCount, groupedBy);
-    #longestFilesFramesCount = getLongestSampleSize(filesList)
-    
+    longestFilesFramesCount = getLongestSampleSize(filesList)
+    if (longestFilesFramesCount > 22050):
+        longestFilesFramesCount = 22050;
     print "Longest file:{0}".format(longestFilesFramesCount);
+    writeHandle = getWriteHandle(masterParams, longestFilesFramesCount, groupedBy);
+
     for fileData in filesList:
         readHandle = wave.open(fileData[0], "r");
         framesTotal = readHandle.getnframes();
