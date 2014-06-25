@@ -20,11 +20,13 @@ def main():
                         help='Specify an output directory')
     parser.add_argument('--glob', metavar='GLOB', type=str, default='*.wav',
                         help='Specify glob pattern')
+    parser.add_argument('--groupby', metavar='GROUPBY', type=int, default=64,
+                        help='Specify slices count')
     args = parser.parse_args()
     pprint.pprint(args)
     files = getWavFilesInDir(dirName=args.dirname, fglob=args.glob)
     waveHandlers = [getFileAndReturnFrames(singleFile) for chunk in files for singleFile in chunk]
-    merge(waveHandlers)
+    merge(waveHandlers, args.output, args.groupby)
     
     
 def getWavFilesInDir(dirName, groupBy=64, fglob="*.wav"):
@@ -49,13 +51,11 @@ def getFileAndReturnFrames(fileName, frames=1000):
     except Exception, exception:
         return str(exception)
     
-def merge(filesList, groupedBy = 64):
+def merge(filesList, writeTo, groupedBy=64):
     masterParams = filesList[0][1];
     longestFilesFramesCount = getLongestSampleSize(filesList)
-    if (longestFilesFramesCount > 22050):
-        longestFilesFramesCount = 22050;
     print "Longest file:{0}".format(longestFilesFramesCount);
-    writeHandle = getWriteHandle(masterParams, longestFilesFramesCount, groupedBy);
+    writeHandle = getWriteHandle(masterParams, longestFilesFramesCount, groupedBy, writeTo);
 
     for fileData in filesList:
         readHandle = wave.open(fileData[0], "r");
@@ -74,8 +74,8 @@ def merge(filesList, groupedBy = 64):
     writeHandle.close();
     
 
-def getWriteHandle(masterParams, singleSampleLength, groupedBy):
-    writeHandle = wave.open('test.wav', 'w');    
+def getWriteHandle(masterParams, singleSampleLength, groupedBy, fileName):
+    writeHandle = wave.open(fileName, 'w');    
     writeHandle.setnchannels(masterParams[0]);
     writeHandle.setsampwidth(masterParams[1]);
     writeHandle.setframerate(masterParams[2]);
