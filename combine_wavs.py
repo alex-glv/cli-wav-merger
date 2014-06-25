@@ -69,7 +69,7 @@ def merge(filesList, writeTo, groupedBy=64):
         readHandle.close();
 
     if (len(filesList) < groupedBy):
-        emptyFrames = getnEmptyFrames(groupedBy - len(filesList) * longestFilesFramesCount,  masterParams[0],  masterParams[1])
+        emptyFrames = getnEmptyFrames((groupedBy - len(filesList)) * longestFilesFramesCount,  masterParams[0],  masterParams[1])
         writeHandle.writeframes(emptyFrames)
     writeHandle.close();
     
